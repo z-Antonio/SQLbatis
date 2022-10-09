@@ -1,5 +1,6 @@
 package com.antonio.android.sqlbatis.util
 
+import android.content.ContentValues
 import android.util.Log
 import com.antonio.android.sqlbatis.BuildConfig
 import java.util.*
@@ -29,6 +30,25 @@ fun <K, V> MutableMap<K, V>.pull(key: K, create: (key: K) -> V): V =
 inline fun <reified T> inject() = lazy {
     val clz = Class.forName("com.antonio.android.sqlbatis.impl.${T::class.java.simpleName}Impl")
     return@lazy clz.newInstance() as T
+}
+
+fun ContentValues.transfer(): ContentValues = ContentValues(this.size()).apply {
+    this@transfer.keySet().forEach {
+        val value = this@transfer[it]
+        val key = it.humpToUnderline()
+        when (value) {
+            null -> this.putNull(key)
+            is String -> this.put(key, value)
+            is Byte -> this.put(key, value)
+            is Short -> this.put(key, value)
+            is Int -> this.put(key, value)
+            is Long -> this.put(key, value)
+            is Float -> this.put(key, value)
+            is Double -> this.put(key, value)
+            is Boolean -> this.put(key, value)
+            is ByteArray -> this.put(key, value)
+        }
+    }
 }
 
 val LOCALE: Locale = Locale.getDefault()

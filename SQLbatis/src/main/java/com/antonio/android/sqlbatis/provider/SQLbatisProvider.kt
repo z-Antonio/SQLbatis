@@ -9,6 +9,7 @@ import android.net.Uri
 import com.antonio.android.sqlbatis.SQLbatis
 import com.antonio.android.sqlbatis.handle.DatabaseHandler
 import com.antonio.android.sqlbatis.util.humpToUnderline
+import com.antonio.android.sqlbatis.util.transfer
 
 class SQLbatisProvider : ContentProvider() {
 
@@ -35,7 +36,7 @@ class SQLbatisProvider : ContentProvider() {
 
     override fun insert(uri: Uri, values: ContentValues?): Uri? =
         doDatabase(uri, true) { db, table ->
-            val result = db.insert(table, null, values)
+            val result = db.insert(table, null, values?.transfer())
             return@doDatabase ContentUris.withAppendedId(uri, result)
         }
 
@@ -50,7 +51,7 @@ class SQLbatisProvider : ContentProvider() {
         selection: String?,
         selectionArgs: Array<out String>?
     ): Int = doDatabase(uri, true) { db, table ->
-        db.update(table, values, selection, selectionArgs)
+        db.update(table, values?.transfer(), selection, selectionArgs)
     } ?: 0
 
     private fun <T> doDatabase(
