@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.antonio.android.sqlbatis.app">
+    package="com.sqlbatis.android.app">
 
     <application
         android:allowBackup="true"
@@ -14,7 +14,7 @@
         android:theme="@style/Theme.SQLbatis"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name="com.sqlbatis.android.app.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,8 +23,8 @@
         </activity>
 
         <provider
-            android:authorities="com.antonio.test"
-            android:name="com.antonio.android.sqlbatis.provider.SQLbatisProvider"
+            android:authorities="com.sqlbatis.test"
+            android:name="com.sqlbatis.android.provider.SQLbatisProvider"
             android:process=":database">
         </provider>
     </application>

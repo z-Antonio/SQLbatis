@@ -4,23 +4,26 @@ sqlite helper for android
 ### 项目导入
   
 ```
-implementation 'com.github.z-Antonio.SQLbatis:SQLbatis:1.0.0'
-kapt 'com.github.z-Antonio.SQLbatis:SQLbatisProcessor:1.0.0'
+// SQLbatis功能sdk，主要类有：SQLbatisProvider、SQLbatisHelper
+implementation 'com.github.z-Antonio.SQLbatis:SQLbatis:$new_version'
+// 当使用注解标注的包需要添加此依赖，用来自动生成数据表结构
+kapt 'com.github.z-Antonio.SQLbatis:SQLbatisProcessor:$new_version'
 ```
 
 ### 使用
 #### 数据模型
 通过对class添加注解，自动创建表结构  
-* Database    
-	* name  
-* ColumnName  
-	* primaryKey  
-	* autoIncr  
-	* dataType  
-	* nonNull  
-	* defaultValue  
+（所有数据库名、表名、列名都会将驼峰转化为下划线小写的形式）  
+* Database _该类保存为数据库结构，类名即为表名_    
+	* name _对应表所在的数据库名称_  
+* ColumnName _对应表中的一列，方法名即为列名_  
+	* primaryKey _是否是主键，默认false_  
+	* autoIncr _是否是自增长，只有dataType为integer有效，默认false_  
+	* dataType _数据类型，目前只有integer、real、text(默认)、blob_  
+	* nonNull _该列不能为null，默认false_  
+	* defaultValue _默认值，不配置则无，当nonNull=true，会根据数据类型自动填充默认的defaultValue_  
 	
-代码示例： [TableA.kt](/app/src/main/java/com/antonio/android/sqlbatis/app/db/TableA.kt)
+代码示例： [TableA.kt](/app/src/main/java/com/sqlbatis/android/app/db/TableA.kt)
    
 ```
 @Database("TestDb1")
@@ -72,21 +75,26 @@ class TableA2 {
 content://custom.authorities/dbName/tableName
 
 #### Provider  
-manifest注册：  
+manifest注册：[AndroidManifest.xml](/app/src/main/AndroidManifest.xml)  
     
 ```
 <provider
       android:authorities="custom.authorities"
-      android:name="com.antonio.android.sqlbatis.provider.SQLbatisProvider"
+      android:name="com.sqlbatis.android.provider.SQLbatisProvider"
       android:process=":database">
  </provider>
 ```  
-也支持通过继承 SQLbatisProvider  
-自定义其他sqlite语句的创建（比如触发器），从而实现更多的功能   
+  
+#### 自定义
+也支持通过继承 SQLbatisHelper 和 SQLbatisProvider 实现更多自定义功能（比如触发器）  
+示例：  
+[MySqlBatisHelper.kt](/app/src/main/java/com/sqlbatis/android/app/MySqlBatisHelper.kt)  
+[MySqlBatisProvider.kt](/app/src/main/java/com/sqlbatis/android/app/MySqlBatisProvider.kt)   
 
 ### 优势
-1. ContentProvider支持更便捷：注册即可使用，无需额外代码
-2. 支持多数据库多表，数据模型更清晰
+1. 自动生成数据库以及创建表结构、表升级，支持多库多表
+2. ContentProvider支持更便捷：注册即可使用，无需额外代码
+3. 支持多数据库多表，数据模型更清晰，可支持跨进程
 
 ### 注意
 * dbName、tableName、columnName最终生成的数据库中都是将驼峰转下划线小写的形式，使用ContentValues已经做了转化，手写语句的时候需要注意
