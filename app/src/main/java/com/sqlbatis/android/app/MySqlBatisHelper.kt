@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import com.sqlbatis.android.SQLbatisHelper
 import com.sqlbatis.android.handle.TableInfo
 
-class MySqlBatisHelper(context: Context, name: String? = null): SQLbatisHelper(context, name) {
+class MySqlBatisHelper(context: Context, name: String): SQLbatisHelper(context, name) {
 
     override fun onConfigure(db: SQLiteDatabase) {
         super.onConfigure(db)

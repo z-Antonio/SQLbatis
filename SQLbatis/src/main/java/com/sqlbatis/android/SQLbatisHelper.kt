@@ -11,7 +11,7 @@ import com.sqlbatis.android.util.printSQL
 
 typealias SQLbatisCreator = (dbName: String) -> SQLbatisHelper
 
-open class SQLbatisHelper(private val mContext: Context, private val mName: String? = null) {
+open class SQLbatisHelper(context: Context, name: String) {
 
     companion object {
         const val MEMORY_DB_PATH = ":memory:"
@@ -22,10 +22,16 @@ open class SQLbatisHelper(private val mContext: Context, private val mName: Stri
         const val S_IWGRP = 16
     }
 
+    private val mContext: Context
+    private val mName: String
     private val mTableInfos = mutableListOf<TableInfo>()
-
     private var mIsInitializing = false
     private var mDatabase: SQLiteDatabase? = null
+
+    init {
+        mContext = context.applicationContext
+        mName = name
+    }
 
     fun addTableInfo(tableInfo: TableInfo) {
         mTableInfos.add(tableInfo)
@@ -33,7 +39,7 @@ open class SQLbatisHelper(private val mContext: Context, private val mName: Stri
 
     fun getContext(): Context = mContext
 
-    fun getDatabaseName(): String? = mName
+    fun getDatabaseName(): String = mName
 
     @Synchronized
     fun getDatabase(): SQLiteDatabase? {
@@ -131,7 +137,7 @@ open class SQLbatisHelper(private val mContext: Context, private val mName: Stri
         }
     }
 
-    fun checkAndUpgrade(db: SQLiteDatabase, tableInfos: List<TableInfo>): List<TableInfo> {
+    private fun checkAndUpgrade(db: SQLiteDatabase, tableInfos: List<TableInfo>): List<TableInfo> {
         val upgrades = mutableListOf<TableInfo>()
         tableInfos.forEach { tableInfo ->
             try {

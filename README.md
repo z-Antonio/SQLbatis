@@ -84,7 +84,18 @@ manifest注册：[AndroidManifest.xml](/app/src/main/AndroidManifest.xml)
       android:process=":database">
  </provider>
 ```  
+
+#### 获取Database
+可以通过调用 SQLbatis.getDatabase() 方法获取Database对象
   
+```
+	// java 调用
+	Database db = SQLbatis.companion.getDatabase(context, "dbName");
+
+	// kotlin 调用
+	val db = SQLbatis.getDatabase(context, "dbName")
+```  
+
 #### 自定义
 也支持通过继承 SQLbatisHelper 和 SQLbatisProvider 实现更多自定义功能（比如触发器）  
 示例：  

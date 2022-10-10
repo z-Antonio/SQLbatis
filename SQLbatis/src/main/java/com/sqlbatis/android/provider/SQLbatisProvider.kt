@@ -3,7 +3,6 @@ package com.sqlbatis.android.provider
 import android.content.ContentProvider
 import android.content.ContentUris
 import android.content.ContentValues
-import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
@@ -17,17 +16,15 @@ open class SQLbatisProvider : ContentProvider() {
 
     private lateinit var handler: DatabaseHandler
 
+    open fun supportSqlHelper(): Class<out SQLbatisHelper> = SQLbatisHelper::class.java
+
     override fun onCreate(): Boolean {
+        SQLbatis.registerSqlHelper(supportSqlHelper())
         context?.let { ctx ->
-            handler = SQLbatis.init { dbName ->
-                create(ctx, dbName)
-            }
+            handler = SQLbatis.init(ctx)
         }
         return true
     }
-
-    open fun create(context: Context, dbName: String): SQLbatisHelper =
-        SQLbatisHelper(context, dbName)
 
     override fun getType(uri: Uri): String? = null
 
