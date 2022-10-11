@@ -141,17 +141,15 @@ open class SQLbatisHelper(context: Context, name: String) {
         val upgrades = mutableListOf<TableInfo>()
         tableInfos.forEach { tableInfo ->
             try {
-                db.rawQuery("SELECT * FROM ${tableInfo.name} LIMIT 1", null)?.let { c ->
-                    tableInfo.alterSQL(c).apply {
-                        if (this.isNotEmpty()) {
-                            upgrades.add(tableInfo)
+                db.rawQuery("SELECT * FROM ${tableInfo.name} LIMIT 1", null)?.let { cursor ->
+                    cursor.use { c ->
+                        tableInfo.alterSQL(c).apply {
+                            if (this.isNotEmpty()) {
+                                upgrades.add(tableInfo)
+                            }
+                        }.forEach { sql ->
+                            db.execSQL(sql)
                         }
-                    }.forEach { sql ->
-                        db.execSQL(sql)
-                    }
-                    try {
-                        c.close()
-                    } catch (e: Exception) {
                     }
                 }
             } catch (e: Exception) {

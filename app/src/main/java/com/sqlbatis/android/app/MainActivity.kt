@@ -8,6 +8,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.widget.TextView
+import com.sqlbatis.android.SQLbatis
+import com.sqlbatis.android.app.db.TableA1
 import com.sqlbatis.android.util.printSQL
 
 class MainActivity : AppCompatActivity() {
@@ -43,21 +45,46 @@ class MainActivity : AppCompatActivity() {
         contentResolver.registerContentObserver(uri2, true, observer)
 
         findViewById<TextView>(R.id.tableA).setOnClickListener {
-            val result = contentResolver.insert(Uri.parse("$URI_A/$TABLE_A2"), ContentValues().apply {
-                index++
-                put("int_null", index)
-                put("real_null", index.toFloat())
-                put("text_null", "AAA${index}")
-                put("blob_null", byteArrayOf(index.toByte()))
-            })
-            printSQL("insert ====> result=$result")
+            val list = mutableListOf<TableA1>().apply {
+                for (i in 0..10) {
+                    add(TableA1().apply {
+                        textValue = "a$i"
+                        intValue = i
+                    })
+                }
+            }
+            printSQL("insertList ===> ${SQLbatis.insertList(this, list)}")
+            printSQL("delete ===> ${SQLbatis.delete(this, list[3])}")
+            printSQL("query ===> ${SQLbatis.query<TableA1>(this)}")
+            printSQL("insertOrUpdate ===> ${SQLbatis.insertOrUpdate(this, TableA1().apply {
+                id = 5
+                textValue = "b5"
+                intValue = 50
+            })}")
+            printSQL("query ===> ${SQLbatis.query<TableA1>(this)}")
+            printSQL("insertOrUpdate ===> ${SQLbatis.insertOrUpdate(this, TableA1().apply {
+                id = 111
+                textValue = "insert111"
+                intValue = 111
+            })}")
+            val query = SQLbatis.query<TableA1>(this)
+            printSQL("query ===> $query")
+            printSQL("updateList ===> ${SQLbatis.updateList(this, query.map { TableA1().apply {
+                this.id = it.id
+                this.textValue = it.textValue?.replace("a", "c")
+                this.intValue = it.intValue?.plus(10)
+            } })}")
+            printSQL("query ===> ${SQLbatis.query<TableA1>(this)}")
+            printSQL("deleteList ===> ${SQLbatis.deleteList(this, query.filter { it.id?.rem(2) == 0 })}")
+            printSQL("query ===> ${SQLbatis.query<TableA1>(this)}")
         }
         findViewById<TextView>(R.id.tableB).setOnClickListener {
-            val result = contentResolver.insert(Uri.parse("$URI_B/$TABLE_B2"), ContentValues().apply {
-                index++
-                put("price_value_b", index.toFloat())
-                put("msg_value_b", "BBB$index")
-            })
+            val result =
+                contentResolver.insert(Uri.parse("$URI_B/$TABLE_B2"), ContentValues().apply {
+                    index++
+                    put("price_value_b", index.toFloat())
+                    put("msg_value_b", "BBB$index")
+                })
             printSQL("insert ====> result=$result")
         }
     }

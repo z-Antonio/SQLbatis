@@ -69,6 +69,15 @@ class TableA2 {
 }
 ```
   
+#### 数据库操作
+下列方法的T对象都必须被@Database注解标注
++ SQLbatis.insertList(Context, List<T>) 批量插入对象
++ SQLbatis.insertOrUpdate(Context, T) 插入或更新对象
++ SQLbatis.updateList(Context, List<T>) 批量更新对象，标注有primaryKey=true的字段必须有值，否则不更新
++ SQLbatis.delete(Context, T) 删除对象，如果标注primaryKey=true的字段有值着根据此字段删除，没有根据其他字段匹配
++ SQLbatis.deleteList(Context, List<T>) 批量删除对象，只会根据标注有primaryKey=true的column进行删除
++ SQLbatis.query<T>(Context, selection, selectionArgs, sortOrder) 根据输入的类型自动匹配数据库和表，并根据条件(可null)返回对象列表
++ SQLbatis.getDatabase(Context, dbName) 根据数据库名称获取SQLiteDatabase，自由进行数据库操作
   
 #### Provider使用 
 ##### Uri

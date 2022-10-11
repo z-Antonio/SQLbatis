@@ -7,11 +7,18 @@ import com.sqlbatis.android.annotation.Database
 @Database("TestDb1")
 class TableA1 {
 
-    @ColumnName(primaryKey = true, dataType = DataType.integer)
-    var idA: Int = 0
+    @ColumnName(primaryKey = true, autoIncr = true, dataType = DataType.integer)
+    var id: Int? = null
 
-    @ColumnName()
-    var textValueA: String? = null
+    @ColumnName
+    var textValue: String? = null
+
+    @ColumnName(dataType = DataType.integer)
+    var intValue: Int? = null
+
+    override fun toString(): String {
+        return "TableA1(id=$id, textValue=$textValue, intValue=$intValue)\n"
+    }
 }
 
 @Database("TestDb1")

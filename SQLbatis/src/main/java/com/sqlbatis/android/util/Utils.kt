@@ -1,12 +1,16 @@
 package com.sqlbatis.android.util
 
 import android.content.ContentValues
+import android.content.Context
+import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import com.sqlbatis.android.BuildConfig
+import com.sqlbatis.android.SQLbatis
+import com.sqlbatis.android.annotation.ColumnName
+import com.sqlbatis.android.annotation.Database
 import java.util.*
 import java.util.regex.Pattern
-
-object Utils
 
 enum class L {
     V, D, I, W, E
@@ -94,4 +98,73 @@ fun String.underlineToHump(upperFirst: Boolean = false): String {
         }
     }
     return sb.toString()
+}
+
+fun <T> findDatabase(
+    context: Context,
+    clazz: Class<*>,
+    action: (db: SQLiteDatabase, table: String) -> T
+): T {
+    clazz.getAnnotation(Database::class.java)?.let { annotation ->
+        SQLbatis.getDatabase(context, annotation.name)?.let { db ->
+            return action(db, clazz.simpleName.humpToUnderline())
+        }
+    }
+    throw RuntimeException("${clazz.canonicalName} does not use @Database annotation")
+}
+
+fun Any.fillCursor(cursor: Cursor): Boolean {
+    this::class.java.declaredFields.forEach { field ->
+        val index = cursor.getColumnIndex(field.name.humpToUnderline())
+        if (index != -1) {
+            try {
+                field.isAccessible = true
+                field.set(this, cursor.getValue(field.type, index))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+    return true
+}
+
+fun Cursor.getValue(type: Class<*>, index: Int): Any? =
+    when (type) {
+        String::class.java -> getString(index)
+        Float::class.java -> getFloat(index)
+        Double::class.java -> getDouble(index)
+        Integer::class.java -> getInt(index)
+        Int::class.java -> getInt(index)
+        Long::class.java -> getLong(index)
+        Short::class.java -> getShort(index)
+        ByteArray::class.java -> getBlob(index)
+        else -> null
+    }
+
+fun Any.toContentValues(): ContentValues {
+    val cv = ContentValues()
+    this@toContentValues::class.java.declaredFields.forEach { field ->
+        field.isAccessible = true
+        field.get(this@toContentValues)?.let { value ->
+            val key = field.name.humpToUnderline()
+            when (value) {
+                is String -> cv.put(key, value)
+                is Float -> cv.put(key, value)
+                is Double -> cv.put(key, value)
+                is Int -> cv.put(key, value)
+                is Long -> cv.put(key, value)
+                is Short -> cv.put(key, value)
+                is ByteArray -> cv.put(key, value)
+            }
+        }
+    }
+    return cv
+}
+
+fun Any.findPrimaryKey(): Pair<String, Any?>? {
+    return this::class.java.declaredFields.find { it.getAnnotation(ColumnName::class.java)?.primaryKey == true }
+        ?.let { field ->
+            field.isAccessible = true
+            Pair(field.name.humpToUnderline(), field.get(this))
+        }
 }

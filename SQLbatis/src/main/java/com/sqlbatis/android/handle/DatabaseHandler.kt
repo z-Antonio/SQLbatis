@@ -13,7 +13,7 @@ class DatabaseHandler(private val creator: SQLbatisCreator) {
         map.pull(dbName.humpToUnderline(), creator).addTableInfo(tableInfo)
     }
 
-    fun getDatabase(dbName: String): SQLiteDatabase? = map[dbName]?.getDatabase()
+    fun getDatabase(dbName: String): SQLiteDatabase? = map[dbName.humpToUnderline()]?.getDatabase()
 
     override fun toString(): String {
         val sb = StringBuilder("database handler --->\n")
