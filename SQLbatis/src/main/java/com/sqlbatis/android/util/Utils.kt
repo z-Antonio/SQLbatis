@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.net.Uri
 import android.util.Log
 import com.sqlbatis.android.BuildConfig
 import com.sqlbatis.android.SQLbatis
@@ -110,7 +111,28 @@ fun <T> findDatabase(
             return action(db, clazz.simpleName.humpToUnderline())
         }
     }
-    throw RuntimeException("${clazz.canonicalName} does not use @Database annotation")
+    throw RuntimeException("${clazz.canonicalName} must use @Database annotation")
+}
+
+fun Class<*>.transferUri(authorities: String): Uri {
+    this.getAnnotation(Database::class.java)?.let { annotation ->
+        return Uri.parse("content://$authorities/${annotation.name}/$simpleName").apply {
+            printSQL("transferUri ===> $this")
+        }
+    }
+    throw RuntimeException("$canonicalName must use @Database annotation")
+}
+
+inline fun <reified T> Cursor.transform(): List<T> = mutableListOf<T>().apply {
+    if (moveToFirst()) {
+        do {
+            T::class.java.newInstance()?.let {
+                if (it.fillCursor(this@transform)) {
+                    add(it)
+                }
+            }
+        } while (moveToNext())
+    }
 }
 
 fun Any.fillCursor(cursor: Cursor): Boolean {

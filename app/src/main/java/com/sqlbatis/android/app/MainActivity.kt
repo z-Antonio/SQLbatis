@@ -56,27 +56,69 @@ class MainActivity : AppCompatActivity() {
             printSQL("insertList ===> ${SQLbatis.insertList(this, list)}")
             printSQL("delete ===> ${SQLbatis.delete(this, list[3])}")
             printSQL("query ===> ${SQLbatis.query<TableA1>(this)}")
-            printSQL("insertOrUpdate ===> ${SQLbatis.insertOrUpdate(this, TableA1().apply {
-                id = 5
-                textValue = "b5"
-                intValue = 50
-            })}")
+            printSQL(
+                "insertOrUpdate ===> ${
+                    SQLbatis.insertOrUpdate(this, TableA1().apply {
+                        id = 5
+                        textValue = "b5"
+                        intValue = 50
+                    })
+                }"
+            )
             printSQL("query ===> ${SQLbatis.query<TableA1>(this)}")
-            printSQL("insertOrUpdate ===> ${SQLbatis.insertOrUpdate(this, TableA1().apply {
-                id = 111
-                textValue = "insert111"
-                intValue = 111
-            })}")
+            printSQL(
+                "insertOrUpdate ===> ${
+                    SQLbatis.insertOrUpdate(this, TableA1().apply {
+                        id = 111
+                        textValue = "insert111"
+                        intValue = 111
+                    })
+                }"
+            )
             val query = SQLbatis.query<TableA1>(this)
             printSQL("query ===> $query")
-            printSQL("updateList ===> ${SQLbatis.updateList(this, query.map { TableA1().apply {
-                this.id = it.id
-                this.textValue = it.textValue?.replace("a", "c")
-                this.intValue = it.intValue?.plus(10)
-            } })}")
+            printSQL(
+                "updateList ===> ${
+                    SQLbatis.updateList(this, query.map {
+                        TableA1().apply {
+                            this.id = it.id
+                            this.textValue = it.textValue?.replace("a", "c")
+                            this.intValue = it.intValue?.plus(10)
+                        }
+                    })
+                }"
+            )
             printSQL("query ===> ${SQLbatis.query<TableA1>(this)}")
-            printSQL("deleteList ===> ${SQLbatis.deleteList(this, query.filter { it.id?.rem(2) == 0 })}")
+            printSQL(
+                "deleteList ===> ${
+                    SQLbatis.deleteList(
+                        this,
+                        query.filter { it.id?.rem(2) == 0 })
+                }"
+            )
             printSQL("query ===> ${SQLbatis.query<TableA1>(this)}")
+            val updates = mutableListOf<TableA1>().apply {
+                for (i in 6..16) {
+                    add(TableA1().apply {
+                        id = i
+                        textValue = "z$i"
+                        intValue = i.plus(100)
+                    })
+                }
+            }
+            printSQL("batchInsertOrUpdate ===> ${SQLbatis.batchInsertOrUpdate(this, updates)}")
+            it.postDelayed(object : Runnable {
+                override fun run() {
+                    printSQL(
+                        "queryByAuthorities ===> ${
+                            SQLbatis.queryByAuthorities<TableA1>(
+                                this@MainActivity,
+                                "com.sqlbatis.test"
+                            )
+                        }"
+                    )
+                }
+            }, 1000L)
         }
         findViewById<TextView>(R.id.tableB).setOnClickListener {
             val result =

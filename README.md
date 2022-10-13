@@ -71,13 +71,19 @@ class TableA2 {
   
 #### 数据库操作
 下列方法的T对象都必须被@Database注解标注
-+ SQLbatis.insertList(Context, List<T>) 批量插入对象
++ SQLbatis.getUri\<T>(authorities) 根据T类型返回对应的Uri
++ SQLbatis.insertList(Context, List\<T>) 批量插入对象
 + SQLbatis.insertOrUpdate(Context, T) 插入或更新对象
-+ SQLbatis.updateList(Context, List<T>) 批量更新对象，标注有primaryKey=true的字段必须有值，否则不更新
++ SQLbatis.batchInsertOrUpdate(Context, T) 批量插入或更新对象
++ SQLbatis.updateList(Context, List\<T>) 批量更新对象，标注有primaryKey=true的字段必须有值，否则不更新
 + SQLbatis.delete(Context, T) 删除对象，如果标注primaryKey=true的字段有值着根据此字段删除，没有根据其他字段匹配
-+ SQLbatis.deleteList(Context, List<T>) 批量删除对象，只会根据标注有primaryKey=true的column进行删除
-+ SQLbatis.query<T>(Context, selection, selectionArgs, sortOrder) 根据输入的类型自动匹配数据库和表，并根据条件(可null)返回对象列表
++ SQLbatis.deleteList(Context, List\<T>) 批量删除对象，只会根据标注有primaryKey=true的column进行删除
++ SQLbatis.query\<T>(Context, selection, selectionArgs, sortOrder) 根据T类型自动匹配数据库和表，并根据条件(可null)返回对象列表
++ SQLbatis.queryByUri\<T>(Context, uri, selection, selectionArgs, sortOrder) 根据uri，查询ContentProvider，返回对象列表
++ SQLbatis.queryByAuthorities\<T>(Context, authorities, selection, selectionArgs, sortOrder) 根据authorities，查询ContentProvider，返回对象列表
 + SQLbatis.getDatabase(Context, dbName) 根据数据库名称获取SQLiteDatabase，自由进行数据库操作
+  
+具体使用可参阅demo:[MainActivity](/app/src/main/java/com/sqlbatis/android/app/MainActivity.kt)
   
 #### Provider使用 
 ##### Uri

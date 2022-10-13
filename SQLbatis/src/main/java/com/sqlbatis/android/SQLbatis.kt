@@ -3,6 +3,9 @@ package com.sqlbatis.android
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.net.Uri
+import com.sqlbatis.android.annotation.ColumnName
+import com.sqlbatis.android.annotation.Database
 import com.sqlbatis.android.handle.DatabaseHandler
 import com.sqlbatis.android.handle.DatabaseInit
 import com.sqlbatis.android.util.*
@@ -37,42 +40,111 @@ object SQLbatis {
     fun getDatabase(context: Context, dbName: String): SQLiteDatabase? =
         init(context).getDatabase(dbName)
 
+    inline fun <reified T> getUri(authorities: String): Uri = T::class.java.transferUri(authorities)
+
+    inline fun <reified T> queryByAuthorities(
+        context: Context, authorities: String, selection: String? = null,
+        selectionArgs: Array<out String>? = null,
+        sortOrder: String? = null
+    ): List<T> = queryByUri(context, getUri<T>(authorities), selection, selectionArgs, sortOrder)
+
+    inline fun <reified T> queryByUri(
+        context: Context, uri: Uri, selection: String? = null,
+        selectionArgs: Array<out String>? = null,
+        sortOrder: String? = null
+    ): List<T> {
+        context.contentResolver.query(uri, null, selection, selectionArgs, sortOrder)
+            ?.use { cursor ->
+                return cursor.transform()
+            }
+        return emptyList()
+    }
+
     inline fun <reified T> query(
         context: Context, selection: String? = null,
         selectionArgs: Array<out String>? = null,
         sortOrder: String? = null
-    ): List<T> = mutableListOf<T>().apply {
+    ): List<T> {
         findDatabase<Cursor>(context, T::class.java) { db, table ->
             db.query(table, null, selection, selectionArgs, null, null, sortOrder)
-        }?.let { cursor ->
-            cursor.use { c ->
-                if (c.moveToFirst()) {
-                    do {
-                        T::class.java.newInstance()?.let {
-                            if (it.fillCursor(c)) {
-                                add(it)
+        }?.use { cursor ->
+            return cursor.transform()
+        }
+        return emptyList()
+    }
+
+    inline fun <reified T> batchInsertOrUpdate(context: Context, list: List<T>): Int {
+        var size = 0
+        findDatabase(context, T::class.java) { db, table ->
+            db.beginTransaction()
+            try {
+                val updates = mutableListOf<T>()
+                T::class.java.declaredFields.find { it.getAnnotation(ColumnName::class.java)?.primaryKey == true }
+                    ?.let { field ->
+                        field.isAccessible = true
+                        val key = field.name.humpToUnderline()
+                        val map = mutableMapOf<String, T>()
+                        val values =
+                            list.mapNotNull { field.get(it)?.toString()?.apply { map[this] = it } }
+                        if (values.isNotEmpty()) {
+                            db.rawQuery(
+                                "SELECT $key FROM $table WHERE $key IN (${values.joinToString { "?" }})",
+                                values.toTypedArray()
+                            )?.use { c ->
+                                if (c.moveToFirst()) {
+                                    do {
+                                        map.remove(c.getString(0))?.let { updates.add(it) }
+                                    } while (c.moveToNext())
+                                }
                             }
                         }
-                    } while (c.moveToNext())
+                    }
+                list.forEach { item ->
+                    if (item != null) {
+                        try {
+                            if (updates.contains(item)) {
+                                val pKey = item.findPrimaryKey()
+                                if (pKey?.second != null) {
+                                    db.update(
+                                        table,
+                                        item?.toContentValues(),
+                                        "${pKey.first}=?",
+                                        arrayOf(pKey.second.toString())
+                                    )
+                                    size++
+                                }
+                            } else {
+                                db.insert(table, null, item?.toContentValues())
+                                size++
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
                 }
+                db.setTransactionSuccessful()
+            } finally {
+                db.endTransaction()
             }
         }
+        return size
     }
 
     fun insertOrUpdate(context: Context, obj: Any): Long {
         return findDatabase(context, obj.javaClass) { db, table ->
             val pKey = obj.findPrimaryKey()
             if (pKey?.second != null) {
-                db.rawQuery("SELECT * FROM $table WHERE ${pKey.first}=?", arrayOf(pKey.second.toString()))?.let { cursor ->
-                    cursor.use { c ->
-                        if (c.count > 0) {
-                            return@findDatabase db.update(
-                                table,
-                                obj.toContentValues(),
-                                "${pKey.first}=?",
-                                arrayOf(pKey.second.toString())
-                            ).toLong()
-                        }
+                db.rawQuery(
+                    "SELECT * FROM $table WHERE ${pKey.first}=?",
+                    arrayOf(pKey.second.toString())
+                )?.use { c ->
+                    if (c.count > 0) {
+                        return@findDatabase db.update(
+                            table,
+                            obj.toContentValues(),
+                            "${pKey.first}=?",
+                            arrayOf(pKey.second.toString())
+                        ).toLong()
                     }
                 }
             }
