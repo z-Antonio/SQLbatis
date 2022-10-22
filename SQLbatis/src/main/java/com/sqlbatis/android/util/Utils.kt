@@ -123,15 +123,20 @@ fun Class<*>.transferUri(authorities: String): Uri {
     throw RuntimeException("$canonicalName must use @Database annotation")
 }
 
-inline fun <reified T> Cursor.transform(): List<T> = mutableListOf<T>().apply {
-    if (moveToFirst()) {
-        do {
-            T::class.java.newInstance()?.let {
-                if (it.fillCursor(this@transform)) {
-                    add(it)
+fun <T> Cursor.convert(clazz: Class<T>): List<T> {
+    if (clazz.getAnnotation(Database::class.java) == null) {
+        throw RuntimeException("$clazz must use @Database annotation")
+    }
+    return mutableListOf<T>().apply {
+        if (moveToFirst()) {
+            do {
+                clazz.newInstance()?.let {
+                    if (it.fillCursor(this@convert)) {
+                        add(it)
+                    }
                 }
-            }
-        } while (moveToNext())
+            } while (moveToNext())
+        }
     }
 }
 

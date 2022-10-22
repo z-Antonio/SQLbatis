@@ -264,4 +264,5 @@ object SQLbatis {
         return size
     }
 
+    inline fun <reified T> Cursor.transform(): List<T> = convert(T::class.java)
 }

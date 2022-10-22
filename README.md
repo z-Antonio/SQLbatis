@@ -89,8 +89,8 @@ class TableA2 {
 ##### Uri
 content://custom.authorities/dbName/tableName
 
-#### Provider  
-manifest注册：[AndroidManifest.xml](/app/src/main/AndroidManifest.xml)  
+##### Provider  
+manifest注册：[AndroidManifest.xml](/app/src/main/AndroidManifest.xml)
     
 ```
 <provider
@@ -100,6 +100,9 @@ manifest注册：[AndroidManifest.xml](/app/src/main/AndroidManifest.xml)
  </provider>
 ```  
 
+#### Loader使用
+创建loader：[SQLbatisLoader.createLoader(context, authorities)](/SQLbatis/src/main/java/com/sqlbatis/android/loader/SQLbatisLoader.kt)  
+  
 #### 获取Database
 可以通过调用 SQLbatis.getDatabase() 方法获取Database对象
   
@@ -118,9 +121,11 @@ manifest注册：[AndroidManifest.xml](/app/src/main/AndroidManifest.xml)
 [MySqlBatisProvider.kt](/app/src/main/java/com/sqlbatis/android/app/MySqlBatisProvider.kt)   
 
 ### 优势
-1. 自动生成数据库以及创建表结构、表升级，支持多库多表
-2. ContentProvider支持更便捷：注册即可使用，无需额外代码
-3. 支持多数据库多表，数据模型更清晰，可支持跨进程
+1. 使用方便：对应的数据模型直接添加注解即可生成数据库，省去DTO到DAO到ContentValues的转化
+2. 维护简单：自动创建数据库，自动完成表结构创建和升级，支持多库多表
+3. ContentProvider更便捷：直接注册 SQLbatisProvider 即可使用，无需额外代码
+4. 支持跨进程：SQLbatisProvider 和 SQLbatisLoader 搭配使用，跨进程服务更稳定
+5. 更省心：直接操作数据对象，省去对象到SQL的过程
 
 ### 注意
 * dbName、tableName、columnName最终生成的数据库中都是将驼峰转下划线小写的形式，使用ContentValues已经做了转化，手写语句的时候需要注意
