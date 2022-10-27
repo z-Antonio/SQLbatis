@@ -38,20 +38,30 @@ inline fun <reified T> inject() = lazy {
 }
 
 fun ContentValues.transfer(): ContentValues = ContentValues(this.size()).apply {
-    this@transfer.keySet().forEach {
-        val value = this@transfer[it]
-        val key = it.humpToUnderline()
-        when (value) {
-            null -> this.putNull(key)
-            is String -> this.put(key, value)
-            is Byte -> this.put(key, value)
-            is Short -> this.put(key, value)
-            is Int -> this.put(key, value)
-            is Long -> this.put(key, value)
-            is Float -> this.put(key, value)
-            is Double -> this.put(key, value)
-            is Boolean -> this.put(key, value)
-            is ByteArray -> this.put(key, value)
+    this@transfer.keySet().forEach { item ->
+        val key = item.humpToUnderline()
+        this@transfer[item].isNull {
+            this.putNull(key)
+        }.isInt {
+            this.put(key, it)
+        }.isLong {
+            this.put(key, it)
+        }.isFloat {
+            this.put(key, it)
+        }.isDouble {
+            this.put(key, it)
+        }.isByte {
+            this.put(key, it)
+        }.isChar {
+            this.put(key, it.code)
+        }.isShort {
+            this.put(key, it)
+        }.isBoolean {
+            this.put(key, it)
+        }.isString {
+            this.put(key, it)
+        }.isTypeOf<ByteArray> {
+            this.put(key, it)
         }
     }
 }
@@ -155,18 +165,23 @@ fun Any.fillCursor(cursor: Cursor): Boolean {
     return true
 }
 
-fun Cursor.getValue(type: Class<*>, index: Int): Any? =
-    when (type) {
-        String::class.java -> getString(index)
-        Float::class.java -> getFloat(index)
-        Double::class.java -> getDouble(index)
-        Integer::class.java -> getInt(index)
-        Int::class.java -> getInt(index)
-        Long::class.java -> getLong(index)
-        Short::class.java -> getShort(index)
-        ByteArray::class.java -> getBlob(index)
-        else -> null
+fun Cursor.getValue(type: Class<*>, index: Int): Any? {
+    if (type == ByteArray::class.java) {
+        return getBlob(index)
     }
+    when (type.toClassType()) {
+        ClassType.STRING -> return getString(index)
+        ClassType.FLOAT -> return getFloat(index)
+        ClassType.DOUBLE -> return getDouble(index)
+        ClassType.INT -> return getInt(index)
+        ClassType.LONG -> return getLong(index)
+        ClassType.BYTE -> return getInt(index).toByte()
+        ClassType.CHAR -> return getInt(index).toChar()
+        ClassType.SHORT -> return getShort(index)
+        ClassType.BOOLEAN -> return getInt(index) == 1
+    }
+    return null
+}
 
 fun Any.toContentValues(): ContentValues {
     val cv = ContentValues()
@@ -174,14 +189,24 @@ fun Any.toContentValues(): ContentValues {
         field.isAccessible = true
         field.get(this@toContentValues)?.let { value ->
             val key = field.name.humpToUnderline()
-            when (value) {
-                is String -> cv.put(key, value)
-                is Float -> cv.put(key, value)
-                is Double -> cv.put(key, value)
-                is Int -> cv.put(key, value)
-                is Long -> cv.put(key, value)
-                is Short -> cv.put(key, value)
-                is ByteArray -> cv.put(key, value)
+            value.classType().isString {
+                cv.put(key, it)
+            }.isFloat {
+                cv.put(key, it)
+            }.isDouble {
+                cv.put(key, it)
+            }.isInt {
+                cv.put(key, it)
+            }.isLong {
+                cv.put(key, it)
+            }.isShort {
+                cv.put(key, it)
+            }.isBoolean {
+                cv.put(key, it)
+            }.isByte {
+                cv.put(key, it)
+            }.isTypeOf<ByteArray> {
+                cv.put(key, it)
             }
         }
     }
