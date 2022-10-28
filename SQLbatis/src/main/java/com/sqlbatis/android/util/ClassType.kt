@@ -164,6 +164,11 @@ fun Type.isString(action: (String) -> Unit): Type {
     return this
 }
 
+fun Type.otherType(action: (Any) -> Unit): Type {
+    if (type == ClassType.OTHER) action(getValue())
+    return this
+}
+
 inline fun <reified T> Type.isTypeOf(action: (T) -> Unit): Type {
     runCatching { action(getValue()) }
     return this
