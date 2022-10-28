@@ -187,26 +187,28 @@ fun Any.toContentValues(): ContentValues {
     val cv = ContentValues()
     this@toContentValues::class.java.declaredFields.forEach { field ->
         field.isAccessible = true
-        field.get(this@toContentValues)?.let { value ->
-            val key = field.name.humpToUnderline()
-            value.classType().isString {
-                cv.put(key, it)
-            }.isFloat {
-                cv.put(key, it)
-            }.isDouble {
-                cv.put(key, it)
-            }.isInt {
-                cv.put(key, it)
-            }.isLong {
-                cv.put(key, it)
-            }.isShort {
-                cv.put(key, it)
-            }.isBoolean {
-                cv.put(key, it)
-            }.isByte {
-                cv.put(key, it)
-            }.isTypeOf<ByteArray> {
-                cv.put(key, it)
+        if (field.getAnnotation(ColumnName::class.java) != null) {
+            field.get(this@toContentValues)?.let { value ->
+                val key = field.name.humpToUnderline()
+                value.classType().isString {
+                    cv.put(key, it)
+                }.isFloat {
+                    cv.put(key, it)
+                }.isDouble {
+                    cv.put(key, it)
+                }.isInt {
+                    cv.put(key, it)
+                }.isLong {
+                    cv.put(key, it)
+                }.isShort {
+                    cv.put(key, it)
+                }.isBoolean {
+                    cv.put(key, it)
+                }.isByte {
+                    cv.put(key, it)
+                }.isTypeOf<ByteArray> {
+                    cv.put(key, it)
+                }
             }
         }
     }
