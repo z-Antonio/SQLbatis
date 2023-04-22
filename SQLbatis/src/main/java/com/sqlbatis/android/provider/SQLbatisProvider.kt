@@ -44,6 +44,25 @@ open class SQLbatisProvider : ContentProvider() {
             return@doDatabase ContentUris.withAppendedId(uri, result)
         }
 
+    override fun bulkInsert(uri: Uri, values: Array<out ContentValues>): Int {
+        return doDatabase(uri, true) { db, table ->
+            var count: Int = 0
+            db.beginTransaction()
+            values.forEach {
+                try {
+                    if (db.insert(table, null, it.transfer()) != -1L) {
+                        count++
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+            db.setTransactionSuccessful()
+            db.endTransaction()
+            return@doDatabase count
+        } ?: 0
+    }
+
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int =
         doDatabase(uri, true) { db, table ->
             db.delete(table, selection, selectionArgs)
