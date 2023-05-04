@@ -40,7 +40,7 @@ open class SQLbatisProvider : ContentProvider() {
 
     override fun insert(uri: Uri, values: ContentValues?): Uri? =
         doDatabase(uri, true) { db, table ->
-            val result = db.insert(table, null, values?.transfer())
+            val result = db.replace(table, null, values?.transfer())
             return@doDatabase ContentUris.withAppendedId(uri, result)
         }
 
@@ -50,7 +50,7 @@ open class SQLbatisProvider : ContentProvider() {
             db.beginTransaction()
             values.forEach {
                 try {
-                    if (db.insert(table, null, it.transfer()) != -1L) {
+                    if (db.replace(table, null, it.transfer()) != -1L) {
                         count++
                     }
                 } catch (e: Exception) {

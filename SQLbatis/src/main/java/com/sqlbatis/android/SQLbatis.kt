@@ -73,6 +73,7 @@ object SQLbatis {
         return emptyList()
     }
 
+    @Deprecated("replace with #batchReplace", ReplaceWith("batchReplace(context, list)"))
     inline fun <reified T> batchInsertOrUpdate(context: Context, list: List<T>): Int {
         var size = 0
         findDatabase(context, T::class.java) { db, table ->
@@ -130,6 +131,29 @@ object SQLbatis {
         return size
     }
 
+    inline fun <reified T> batchReplace(context: Context, list: List<T>): Int {
+        var size = 0
+        findDatabase(context, T::class.java) { db, table ->
+            db.beginTransaction()
+            try {
+                list.forEach { item ->
+                    try {
+                        if (item != null && db.replace(table, null, item.toContentValues()) > -1) {
+                            size++
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                db.setTransactionSuccessful()
+            } finally {
+                db.endTransaction()
+            }
+        }
+        return size
+    }
+
+    @Deprecated("replace with #replace", ReplaceWith("replace(context, obj)"))
     fun insertOrUpdate(context: Context, obj: Any): Long {
         return findDatabase(context, obj.javaClass) { db, table ->
             val pKey = obj.findPrimaryKey()
@@ -157,6 +181,17 @@ object SQLbatis {
         }
     }
 
+    fun replace(context: Context, obj: Any): Long {
+        return findDatabase(context, obj.javaClass) { db, table ->
+            try {
+                return@findDatabase db.replace(table, null, obj.toContentValues())
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            return@findDatabase -1
+        }
+    }
+
     inline fun <reified T> insertList(context: Context, list: List<T>): Int {
         var size = 0
         findDatabase(context, T::class.java) { db, table ->
@@ -164,7 +199,7 @@ object SQLbatis {
             try {
                 list.forEach { item ->
                     try {
-                        if (item != null && db.insert(table, null, item.toContentValues()) > -1) {
+                        if (item != null && db.replace(table, null, item.toContentValues()) > -1) {
                             size++
                         }
                     } catch (e: Exception) {
@@ -180,33 +215,7 @@ object SQLbatis {
     }
 
     inline fun <reified T> updateList(context: Context, list: List<T>): Int {
-        var size = 0
-        findDatabase(context, T::class.java) { db, table ->
-            db.beginTransaction()
-            try {
-                list.forEach { item ->
-                    try {
-                        if (item != null) {
-                            val pKey = item.findPrimaryKey()
-                            if (pKey?.second != null) {
-                                size += db.update(
-                                    table,
-                                    item.toContentValues(),
-                                    "${pKey.first}=?",
-                                    arrayOf(pKey.second.toString())
-                                )
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-                db.setTransactionSuccessful()
-            } finally {
-                db.endTransaction()
-            }
-        }
-        return size
+        return insertList(context, list)
     }
 
     fun delete(context: Context, obj: Any): Int {
